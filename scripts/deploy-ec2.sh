@@ -77,6 +77,16 @@ if [[ -z "$HOST" ]]; then
     HOST="$(cd "$TF_DIR" && terraform output -raw public_ip 2>/dev/null || true)"
   fi
 fi
+
+# Same for the key: Terraform knows where it is, so plain `deploy-ec2.sh`
+# works even when the key is not the ~/.ssh/id_rsa default.
+if [[ ! -f "$SSH_KEY" ]] && command -v terraform >/dev/null 2>&1 && [[ -d "$TF_DIR" ]]; then
+  TF_KEY="$(cd "$TF_DIR" && terraform output -raw private_key_path 2>/dev/null || true)"
+  if [[ -n "$TF_KEY" && -f "$TF_KEY" ]]; then
+    log "Using key from Terraform: $TF_KEY"
+    SSH_KEY="$TF_KEY"
+  fi
+fi
 [[ -n "$HOST" ]] || die "No target host. Pass --host <ip>, or run 'terraform apply' first."
 
 IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"

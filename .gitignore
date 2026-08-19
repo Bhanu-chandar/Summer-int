@@ -4,3 +4,4 @@
 .DS_Store
 jenkins/.env
 compose/.env
+.claude/settings.local.json

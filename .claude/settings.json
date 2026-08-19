@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "Bash(cd *)",
+      "Bash(terraform *)",
+      "Bash(docker *)",
+      "Bash(ansible *)",
+      "Bash(ansible-playbook *)",
+      "Bash(ansible-galaxy *)",
+      "Bash(ansible-inventory *)",
+      "Bash(git *)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(make *)",
+      "Bash(./scripts/deploy-ec2.sh *)",
+      "Bash(./scripts/test-webhook.sh *)",
+      "Bash(curl *)",
+      "Bash(aws sts get-caller-identity)",
+      "Bash(aws configure get *)",
+      "Bash(aws ec2 describe-instances *)",
+      "Bash(aws ec2 describe-security-group-rules *)",
+      "Bash(aws ec2 describe-security-groups *)",
+      "Bash(aws ec2 describe-images *)",
+      "Bash(aws ec2 describe-addresses *)",
+      "Bash(aws ec2 describe-subnets *)",
+      "Bash(aws ec2 describe-vpcs *)",
+      "Bash(aws ec2 describe-instance-status *)"
+    ],
+    "deny": [
+      "Bash(aws ec2 terminate-instances *)",
+      "Bash(aws iam *)",
+      "Bash(docker login *)",
+      "Bash(rm -rf /*)"
+    ]
+  }
+}

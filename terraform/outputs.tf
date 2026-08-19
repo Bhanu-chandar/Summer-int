@@ -22,3 +22,8 @@ output "ansible_inventory_path" {
   description = "Inventory file Terraform generated for Task 1."
   value       = local_file.ansible_inventory.filename
 }
+
+output "private_key_path" {
+  description = "Private key the deploy script and Ansible should use."
+  value       = local.private_key_path
+}
