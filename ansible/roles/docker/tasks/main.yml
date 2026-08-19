@@ -1,0 +1,120 @@
+---
+- name: Fail early on unsupported OS families
+  ansible.builtin.assert:
+    that: ansible_os_family in ['RedHat', 'Debian']
+    fail_msg: "This role supports RedHat (AL2023/RHEL/CentOS) and Debian/Ubuntu only."
+    quiet: true
+
+# --- RedHat family (Amazon Linux 2023, RHEL, Rocky) ------------------------
+
+- name: Install Docker (RedHat family)
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - python3-pip
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'RedHat'
+  become: true
+
+# --- Debian family (Ubuntu) ------------------------------------------------
+
+- name: Install prerequisites (Debian family)
+  ansible.builtin.apt:
+    name: [ca-certificates, curl, gnupg, python3-pip]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- name: Add Docker apt signing key (Debian family)
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- name: Add Docker apt repository (Debian family)
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}
+      signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/{{ ansible_distribution | lower }}
+      {{ ansible_distribution_release }} stable
+    filename: docker
+    state: present
+  when: ansible_os_family == 'Debian'
+  become: true
+
+- name: Install Docker Engine (Debian family)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  when: ansible_os_family == 'Debian'
+  become: true
+
+# --- Common ----------------------------------------------------------------
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+    daemon_reload: true
+  become: true
+
+- name: Add users to the docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+  become: true
+  notify: Reset ssh connection
+
+- name: Check whether the compose CLI plugin is present
+  ansible.builtin.command: docker compose version
+  register: compose_check
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Ensure the docker cli-plugins directory exists
+  ansible.builtin.file:
+    path: /usr/local/lib/docker/cli-plugins
+    state: directory
+    mode: "0755"
+  when: compose_check.rc != 0
+  become: true
+
+- name: Install the Docker Compose v2 CLI plugin
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/docker/compose/releases/download/{{ docker_compose_plugin_version }}/docker-compose-linux-{{ ansible_architecture }}
+    dest: /usr/local/lib/docker/cli-plugins/docker-compose
+    mode: "0755"
+    owner: root
+    group: root
+  when: compose_check.rc != 0
+  become: true
+
+- name: Verify docker and compose are usable
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - docker --version
+    - docker compose version
+  register: docker_versions
+  changed_when: false
+  become: true
+
+- name: Show installed versions
+  ansible.builtin.debug:
+    msg: "{{ docker_versions.results | map(attribute='stdout') | list }}"

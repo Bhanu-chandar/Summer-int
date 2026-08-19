@@ -1,0 +1,114 @@
+---
+- name: Create the application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  become: true
+
+- name: Log in to the container registry
+  community.docker.docker_login:
+    registry_url: "{{ registry_url }}"
+    username: "{{ registry_username }}"
+    password: "{{ registry_password }}"
+    reauthorize: true
+  when: registry_username | length > 0
+  become: true
+  no_log: true
+
+- name: Pull the application image
+  community.docker.docker_image:
+    name: "{{ app_image }}"
+    source: pull
+    force_source: true
+  become: true
+  register: pull_result
+  retries: 3
+  delay: 5
+  until: pull_result is succeeded
+
+# --- Deployment path A: Compose stack (Task 3) -----------------------------
+
+- name: Render the compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ app_dir }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  become: true
+  when: app_deploy_mode == 'compose'
+
+- name: Render the compose .env file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0640"
+  become: true
+  when: app_deploy_mode == 'compose'
+
+- name: Bring the stack up
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    state: present
+    pull: always
+    remove_orphans: true
+  become: true
+  when: app_deploy_mode == 'compose'
+
+# --- Deployment path B: single container -----------------------------------
+
+- name: Install the Docker SDK for Python (single-container mode)
+  ansible.builtin.pip:
+    name: docker>=7.0.0
+    state: present
+    extra_args: "--break-system-packages"
+  become: true
+  when: app_deploy_mode == 'container'
+
+- name: Run the application container
+  community.docker.docker_container:
+    name: "{{ app_name }}-web"
+    image: "{{ app_image }}"
+    state: started
+    restart_policy: unless-stopped   # starts again automatically after reboot
+    pull: true
+    published_ports:
+      - "{{ app_http_port }}:80"
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+  become: true
+  when: app_deploy_mode == 'container'
+
+# --- Verify ----------------------------------------------------------------
+
+- name: Ensure Docker starts on boot (so the app comes back after a reboot)
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+  become: true
+
+- name: Wait for the site to answer on port {{ app_http_port }}
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_http_port }}/healthz"
+    return_content: true
+  register: health
+  retries: 12
+  delay: 5
+  until: health.status is defined and health.status == 200
+  changed_when: false
+
+- name: Report result
+  ansible.builtin.debug:
+    msg: >-
+      {{ app_image }} is serving on http://{{ ansible_host | default(inventory_hostname) }}:{{ app_http_port }}
+      (health check returned "{{ health.content | trim }}")

@@ -1,0 +1,44 @@
+# Jenkins controller for Tasks 5 & 6.
+#
+#   docker compose -f jenkins/docker-compose.yml up -d --build
+#   docker compose -f jenkins/docker-compose.yml logs -f jenkins
+#
+# The initial admin password:
+#   docker exec summerint-jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+name: summerint-jenkins
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: summerint-jenkins:lts
+    container_name: summerint-jenkins
+    restart: unless-stopped
+    ports:
+      - "${JENKINS_PORT:-8080}:8080"   # UI + the /github-webhook/ endpoint
+      - "50000:50000"                  # inbound agents
+    environment:
+      # Tell Jenkins its externally reachable address so the webhook and
+      # generated links are correct. MUST match what GitHub will POST to.
+      JENKINS_URL: "${JENKINS_URL:-http://localhost:8080/}"
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Dhudson.model.DownloadService.noSignatureCheck=true"
+      TZ: "${TZ:-Asia/Kolkata}"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # Build images using the host's Docker daemon.
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  jenkins_home:

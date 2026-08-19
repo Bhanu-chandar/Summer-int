@@ -1,0 +1,6 @@
+.venv-check/
+.env
+*.log
+.DS_Store
+jenkins/.env
+compose/.env

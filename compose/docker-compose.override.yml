@@ -1,0 +1,19 @@
+# Development overrides. Compose loads this file automatically, so a plain
+# `docker compose up -d --build` builds the image locally and bind-mounts the
+# site for instant edits. No Watchtower in dev.
+#
+# NOTE: `ports` is deliberately not repeated here. Compose *appends* list
+# entries when merging files, so redeclaring the port would publish both 80
+# and 8080. Set HTTP_PORT in compose/.env instead (the example uses 8080).
+services:
+  web:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-summerint-site}:dev
+    pull_policy: build
+    volumes:
+      - ../app/site:/usr/share/nginx/html:ro
+      - ../app/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    environment:
+      - ENVIRONMENT=development

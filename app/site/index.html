@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SummerInt — Cloud &amp; DevOps</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>SummerInt</h1>
+    <p class="tag">Static site served by nginx, containerized with Docker,
+       provisioned by Terraform, configured by Ansible.</p>
+    <ul class="stack">
+      <li>Docker + Compose</li>
+      <li>Terraform (AWS EC2)</li>
+      <li>Ansible</li>
+      <li>Watchtower auto-updates</li>
+    </ul>
+    <p class="build">build: <span id="ts"></span></p>
+  </main>
+  <script>document.getElementById('ts').textContent = new Date().toISOString();</script>
+</body>
+</html>

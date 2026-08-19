@@ -1,0 +1,37 @@
+# Production overlay: pull a published image (never build on the server) and
+# run Watchtower so a newly pushed tag is rolled out automatically.
+services:
+  web:
+    pull_policy: always
+    environment:
+      - ENVIRONMENT=production
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  watchtower:
+    image: containrrr/watchtower:1.7.1
+    container_name: summerint-watchtower
+    restart: unless-stopped
+    command: --label-enable --cleanup --rolling-restart --include-restarting
+    environment:
+      # Poll interval in seconds (default: every 5 minutes).
+      WATCHTOWER_POLL_INTERVAL: ${WATCHTOWER_POLL_INTERVAL:-300}
+      WATCHTOWER_TIMEOUT: 30s
+      TZ: ${TZ:-Asia/Kolkata}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount registry credentials read-only if the image is private.
+      # - ${HOME}/.docker/config.json:/config.json:ro
+    networks: [web]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

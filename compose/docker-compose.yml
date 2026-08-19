@@ -1,0 +1,28 @@
+# Base stack, shared by every environment.
+#
+#   dev  : docker compose up -d --build          (picks up docker-compose.override.yml)
+#   prod : docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+name: summerint
+
+services:
+  web:
+    image: ${IMAGE_NAME:-summerint-site}:${IMAGE_TAG:-latest}
+    container_name: summerint-web
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      # Watchtower only touches containers carrying this label (see prod file).
+      com.centurylinklabs.watchtower.enable: "true"
+    networks: [web]
+
+networks:
+  web:
+    driver: bridge

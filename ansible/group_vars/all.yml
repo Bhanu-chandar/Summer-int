@@ -1,0 +1,36 @@
+---
+# ---------------------------------------------------------------------------
+# Image to deploy
+# ---------------------------------------------------------------------------
+app_image_name: "docker.io/instantprachi/summerint-site"
+app_image_tag: "latest"
+app_image: "{{ app_image_name }}:{{ app_image_tag }}"
+
+# ---------------------------------------------------------------------------
+# Runtime
+# ---------------------------------------------------------------------------
+app_name: "summerint"
+app_http_port: 80
+app_dir: "/opt/{{ app_name }}"
+
+# "compose"   -> deploy the Task 3 stack (nginx + watchtower)   [default]
+# "container" -> run a single container with community.docker.docker_container
+app_deploy_mode: "compose"
+
+# Watchtower auto-updates (compose mode only)
+watchtower_enabled: true
+watchtower_poll_interval: 300
+app_timezone: "Asia/Kolkata"
+
+# ---------------------------------------------------------------------------
+# Private registry (leave empty for public images)
+# ---------------------------------------------------------------------------
+registry_url: "https://index.docker.io/v1/"
+registry_username: ""
+registry_password: ""   # keep in ansible-vault, never in plain git
+
+# ---------------------------------------------------------------------------
+# Docker install
+# ---------------------------------------------------------------------------
+docker_users: ["{{ ansible_user }}"]
+docker_compose_plugin_version: "v2.29.7"
