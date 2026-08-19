@@ -96,6 +96,6 @@ terraform apply                   │  pulled by
 |---|---|---|
 | Jenkins accepts the webhook | `Jenkinsfile` → `triggers { githubPush() }` | plus the `github` plugin in `jenkins/plugins.txt` |
 | GitHub → Jenkins connection | `docs/task-06-webhook.md` | exact payload URL, content type, event selection, secret handling |
-| Reachability | `terraform/` → `jenkins_ingress_enabled` | opens 8080 to `jenkins_allowed_cidr`; a precondition prevents clashing with `extra_ingress_ports = [8080]` |
+| Reachability | `terraform/` → `jenkins_ingress_enabled` | opens 8080 to each CIDR in `jenkins_allowed_cidrs` (your IP + GitHub's hook ranges, not `0.0.0.0/0`); a precondition prevents clashing with `extra_ingress_ports = [8080]` |
 | Triggers on push to main | `docs/task-06-webhook.md` §5 | Multibranch (per-branch jobs) or Branch Specifier `*/main`; the push stage is additionally gated by `when { branch 'main' }` |
 | — verification | `scripts/test-webhook.sh` | probes `/github-webhook/`, and `--simulate` POSTs a real-shaped GitHub push payload |

@@ -189,11 +189,11 @@ resource "aws_vpc_security_group_ingress_rule" "extra" {
 
 # Optional Jenkins controller port (Tasks 5 & 6).
 resource "aws_vpc_security_group_ingress_rule" "jenkins" {
-  count = var.jenkins_ingress_enabled ? 1 : 0
+  for_each = var.jenkins_ingress_enabled ? toset(var.jenkins_allowed_cidrs) : toset([])
 
   security_group_id = aws_security_group.web.id
-  description       = "Jenkins UI + GitHub webhook"
-  cidr_ipv4         = var.jenkins_allowed_cidr
+  description       = "Jenkins UI + GitHub webhook (${each.value})"
+  cidr_ipv4         = each.value
   from_port         = 8080
   to_port           = 8080
   ip_protocol       = "tcp"

@@ -7,3 +7,8 @@ public_key_path  = "~/.ssh/id_rsa.pub"
 # Strongly recommended: lock SSH to your own IP.
 #   curl -s ifconfig.me
 ssh_allowed_cidr = "0.0.0.0/0"
+
+# Tasks 5 & 6 - open 8080 for Jenkins. Include your own IP for the UI and
+# GitHub's webhook ranges for push delivery (curl -s https://api.github.com/meta).
+# jenkins_ingress_enabled = true
+# jenkins_allowed_cidrs   = ["203.0.113.4/32", "192.30.252.0/22", "185.199.108.0/22", "140.82.112.0/20", "143.55.64.0/20"]

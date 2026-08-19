@@ -41,22 +41,36 @@ http://<jenkins-host>:8080/github-webhook/      <-- trailing slash matters
 Jenkins must be reachable **from GitHub's servers**, i.e. from the public
 internet. Options:
 
-**a) Open 8080 on the EC2 instance**
+**a) Open 8080 on the EC2 instance** (what this project does)
 
 ```hcl
 # terraform/terraform.tfvars
 jenkins_ingress_enabled = true
-jenkins_allowed_cidr    = "0.0.0.0/0"   # or GitHub's hook ranges, see below
+jenkins_allowed_cidrs = [
+  "14.139.69.34/32",  # you (Jenkins UI)  <- update when your IP changes
+  "192.30.252.0/22",  # GitHub hooks
+  "185.199.108.0/22", # GitHub hooks
+  "140.82.112.0/20",  # GitHub hooks
+  "143.55.64.0/20",   # GitHub hooks
+]
 ```
 
 ```bash
 cd terraform && terraform apply
 ```
 
-Tighter: GitHub publishes its source ranges at
-`https://api.github.com/meta` (the `hooks` array) — put one of those CIDRs in
-`jenkins_allowed_cidr` if you'd rather not open it to everyone. Note only one
-CIDR is supported by that variable; for several, extend the rule to a `for_each`.
+This deliberately does **not** open 8080 to `0.0.0.0/0`. A Jenkins controller
+on the public internet is a well-known target, and the fresh-install setup
+wizard is reachable before you have secured anything. The list above admits
+only you and GitHub.
+
+Two consequences worth knowing:
+
+- **Your IP is dynamic on most connections.** When it changes you lose the UI
+  (not the webhook). Re-run `curl -s https://api.ipify.org`, update the first
+  entry, re-apply.
+- **GitHub's ranges change occasionally.** If deliveries start timing out,
+  refresh them: `curl -s https://api.github.com/meta | jq -r '.hooks[]'`.
 
 **b) Local Jenkins? Tunnel it**
 

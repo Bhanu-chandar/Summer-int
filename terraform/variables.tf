@@ -90,14 +90,25 @@ variable "jenkins_ingress_enabled" {
   description = <<-EOT
     Open port 8080 for a Jenkins controller running on this instance (Task 5/6).
     GitHub's webhook (Task 6) must be able to reach Jenkins, so this opens to
-    var.jenkins_allowed_cidr.
+    var.jenkins_allowed_cidrs.
   EOT
   type        = bool
   default     = false
 }
 
-variable "jenkins_allowed_cidr" {
-  description = "CIDR allowed to reach Jenkins on 8080 when jenkins_ingress_enabled is true."
-  type        = string
-  default     = "0.0.0.0/0"
+variable "jenkins_allowed_cidrs" {
+  description = <<-EOT
+    CIDRs allowed to reach Jenkins on 8080 when jenkins_ingress_enabled is true.
+    A list, because Task 6 needs BOTH your own IP (to use the UI) and GitHub's
+    webhook source ranges (to deliver push events). GitHub publishes the
+    current ranges in the "hooks" array of https://api.github.com/meta.
+    Defaults to the whole internet only so the lab works out of the box.
+  EOT
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = alltrue([for c in var.jenkins_allowed_cidrs : can(cidrhost(c, 0))])
+    error_message = "Every entry must be a valid CIDR block, e.g. 203.0.113.4/32."
+  }
 }
