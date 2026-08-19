@@ -10,7 +10,7 @@ set -euo pipefail
 
 JENKINS_URL="${JENKINS_URL:-http://localhost:8080}"
 BRANCH="${BRANCH:-main}"
-REPO_URL="${REPO_URL:-https://github.com/<your-github-user>/summerint}"
+REPO_URL="${REPO_URL:-https://github.com/Bhanu-chandar/Summer-int}"
 SIMULATE=0
 
 usage() {

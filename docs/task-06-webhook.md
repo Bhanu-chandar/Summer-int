@@ -97,7 +97,7 @@ Without touching GitHub — probe reachability, then optionally fire a fake push
 ```bash
 ./scripts/test-webhook.sh --url http://<ec2-ip>:8080
 ./scripts/test-webhook.sh --url http://<ec2-ip>:8080 \
-    --repo https://github.com/<your-github-user>/summerint --simulate
+    --repo https://github.com/Bhanu-chandar/Summer-int --simulate
 ```
 
 Then the real thing:

@@ -2,7 +2,7 @@ FROM nginx:1.27-alpine
 
 LABEL org.opencontainers.image.title="summerint-site" \
       org.opencontainers.image.description="Static site served by nginx" \
-      org.opencontainers.image.source="https://github.com/instantprachi/summerint"
+      org.opencontainers.image.source="https://github.com/Bhanu-chandar/Summer-int"
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY site/ /usr/share/nginx/html/
