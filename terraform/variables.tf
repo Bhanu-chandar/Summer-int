@@ -34,6 +34,16 @@ variable "public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
+variable "private_key_path" {
+  description = <<-EOT
+    Path to the PRIVATE key matching public_key_path, used in the generated
+    Ansible inventory and the ssh_command output. Leave empty to derive it by
+    stripping ".pub" (works for id_rsa/id_rsa.pub, but not for ".pem" keys).
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "ssh_allowed_cidr" {
   description = <<-EOT
     CIDR allowed to reach port 22. Defaults to 0.0.0.0/0 so the lab works

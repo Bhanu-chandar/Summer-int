@@ -130,9 +130,9 @@ Three files, layered:
 cd compose
 cp .env.example .env
 
-# development (auto-loads the override; HTTP_PORT=8080)
+# development (auto-loads the override; .env sets HTTP_PORT=8080)
 docker compose up -d --build
-curl localhost:8080/healthz
+curl localhost:8080/healthz    # 8080 only if .env sets HTTP_PORT; otherwise 80
 
 # production
 HTTP_PORT=80 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d

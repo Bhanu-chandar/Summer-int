@@ -1,3 +1,8 @@
+locals {
+  # Explicit private key wins; otherwise assume "<public_key_path> minus .pub".
+  private_key_path = var.private_key_path != "" ? pathexpand(var.private_key_path) : replace(pathexpand(var.public_key_path), ".pub", "")
+}
+
 # ---------------------------------------------------------------------------
 # Look-ups
 # ---------------------------------------------------------------------------
@@ -165,7 +170,7 @@ resource "local_file" "ansible_inventory" {
 
     [web:vars]
     ansible_user=${var.ansible_ssh_user}
-    ansible_ssh_private_key_file=${replace(pathexpand(var.public_key_path), ".pub", "")}
+    ansible_ssh_private_key_file=${local.private_key_path}
     ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
   EOT
 }

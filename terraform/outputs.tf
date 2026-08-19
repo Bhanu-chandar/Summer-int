@@ -15,7 +15,7 @@ output "site_url" {
 
 output "ssh_command" {
   description = "Ready-to-paste SSH command."
-  value       = "ssh -i ${replace(pathexpand(var.public_key_path), ".pub", "")} ${var.ansible_ssh_user}@${aws_eip.web.public_ip}"
+  value       = "ssh -i ${local.private_key_path} ${var.ansible_ssh_user}@${aws_eip.web.public_ip}"
 }
 
 output "ansible_inventory_path" {
